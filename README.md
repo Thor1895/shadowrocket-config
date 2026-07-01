@@ -17,7 +17,7 @@ python3 -m pytest -q
 
 The workflow also uploads `output/shadowrocket.conf` as a build artifact.
 
-The auto-publish workflow also runs on pushes to `main`. When `python3 build.py` and `python3 scripts/validate.py` pass, it commits only `output/shadowrocket.conf` back to the repository if that generated file changed. The bot commit uses `[skip ci]` to avoid an infinite workflow loop.
+The auto-publish workflow also runs on pushes to `main`. When `python3 build.py` and `python3 scripts/validate.py` pass, it commits generated release outputs back to the repository if they changed. The bot commit uses `[skip ci]` to avoid an infinite workflow loop, then updates the `latest` GitHub Release assets.
 
 ## Layout
 
@@ -61,13 +61,43 @@ pytest
 
 ## Shadowrocket Import
 
-Use this GitHub raw URL in Shadowrocket as a remote configuration subscription:
+Use this release URL in Shadowrocket as the recommended remote configuration subscription:
+
+```text
+https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
+```
+
+The legacy GitHub raw URL also works, but the release URL is preferred because it is a stable subscription endpoint backed by the auto-publish workflow:
 
 ```text
 https://raw.githubusercontent.com/Thor1895/shadowrocket-config/main/output/shadowrocket.conf
 ```
 
 See [docs/import-shadowrocket.md](docs/import-shadowrocket.md) for import steps.
+
+## Subscription Release
+
+Shadowrocket only needs one permanent URL:
+
+```text
+https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
+```
+
+Every push to `main` rebuilds and validates the config. If the generated output changes, GitHub Actions updates:
+
+- `output/shadowrocket.conf`
+- `output/latest.json`
+- the `latest` GitHub Release asset `shadowrocket.conf`
+- the `latest` GitHub Release asset `latest.json`
+
+`output/latest.json` contains:
+
+- `version`: the commit hash used for the generated release metadata
+- `timestamp`: UTC generation time
+- `raw_url`: the permanent release download URL
+- `sha256`: checksum of `shadowrocket.conf`
+
+The version strategy is intentionally simple: each generated subscription version is tied to a commit hash. Shadowrocket continues to use the same release download URL, while `latest.json` records which commit produced the current artifact and its checksum.
 
 ## Routing Policy
 
@@ -178,6 +208,7 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
    python3 scripts/classify_nodes.py
    python3 scripts/check_openai.py --mode mock
    python3 build.py
+   python3 scripts/release_meta.py
    ```
 
 4. Validate locally:
@@ -187,7 +218,7 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
    python3 -m pytest -q
    ```
 
-5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`.
+5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf` and `output/latest.json`.
 6. Push to `main` and confirm the GitHub Actions run passes.
 
 ## Generated Output Policy
