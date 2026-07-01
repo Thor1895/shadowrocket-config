@@ -28,6 +28,20 @@ rules:
       - DOMAIN-SUFFIX,xhscdn.com,PROXY
       - DOMAIN-KEYWORD,xiaohongshu,PROXY
 
+  - name: Streaming
+    target: Streaming
+    items:
+      - DOMAIN-SUFFIX,netflix.com,Streaming
+      - DOMAIN-SUFFIX,nflxvideo.net,Streaming
+      - DOMAIN-SUFFIX,disneyplus.com,Streaming
+      - DOMAIN-SUFFIX,disney-plus.net,Streaming
+      - DOMAIN-SUFFIX,hulu.com,Streaming
+      - DOMAIN-SUFFIX,hbomax.com,Streaming
+      - DOMAIN-SUFFIX,max.com,Streaming
+      - DOMAIN-SUFFIX,primevideo.com,Streaming
+      - DOMAIN-SUFFIX,youtube.com,Streaming
+      - DOMAIN-SUFFIX,googlevideo.com,Streaming
+
   - name: China Apps
     target: DIRECT
     items:

@@ -6,6 +6,8 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from scripts.classify_nodes import openai_default_nodes, streaming_nodes
+
 
 ROOT = Path(__file__).resolve().parent
 CONFIG_DIR = ROOT / "config"
@@ -27,12 +29,9 @@ def load_config() -> dict[str, Any]:
     nodes = nodes_config["nodes"]
     node_by_name = {node["name"]: node for node in nodes}
 
-    def names_for_countries(countries: set[str]) -> list[str]:
-        return [node["name"] for node in nodes if node["country"] in countries]
-
-    openai_nodes = names_for_countries({"JP", "SG", "US"})
+    openai_nodes = openai_default_nodes(nodes)
     if not openai_nodes:
-        raise ValueError("OpenAI group needs at least one JP, SG, or US node")
+        raise ValueError("OpenAI group needs at least one direct JP, SG, or US node")
 
     groups = [
         {
@@ -44,6 +43,11 @@ def load_config() -> dict[str, Any]:
             "name": "OpenAI",
             "type": "select",
             "members": openai_nodes,
+        },
+        {
+            "name": "Streaming",
+            "type": "select",
+            "members": streaming_nodes(nodes),
         },
         {
             "name": "Gemini",

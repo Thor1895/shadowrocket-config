@@ -69,18 +69,62 @@ See [docs/import-shadowrocket.md](docs/import-shadowrocket.md) for import steps.
 ## Routing Policy
 
 - OpenAI, Gemini, and Claude each have an independent policy group and do not use `PROXY`.
-- OpenAI candidates are limited to Japan, Singapore, and United States nodes.
+- OpenAI candidates are limited to direct Japan, Singapore, and United States nodes.
+- Streaming routes use the `Streaming` group, which prefers dedicated line nodes before falling back to all nodes.
 - Xiaohongshu routes through `PROXY`.
 - Alipay, WeChat, Amap, Meituan, Ele.me, and bank domains route through `DIRECT`.
+
+## Node Naming Rules
+
+Node classification is inferred from each node's `name` in `config/nodes.yaml`.
+
+Recommended format:
+
+```text
+<Region>-<LineType>-<CityOrLabel>
+```
+
+Examples:
+
+```text
+JP-Direct-Tokyo
+SG-Direct-Singapore
+US-Direct-LosAngeles
+HK-Dedicated-HongKong
+MO-Relay-Macau
+```
+
+Recognized line type keywords:
+
+- Direct / `直连`: `Direct`, `直连`
+- Relay / `中转`: `Relay`, `Transit`, `中转`
+- Dedicated / `专线`: `Dedicated`, `IPLC`, `IEPL`, `Premium`, `专线`
+
+Recognized region keywords:
+
+- Hong Kong / `香港`: `HK`, `HongKong`, `Hong Kong`, `香港`
+- Macau / `澳门`: `MO`, `Macau`, `Macao`, `澳门`
+- Japan / `日本`: `JP`, `Japan`, `Tokyo`, `Osaka`, `日本`, `东京`, `大阪`
+- Singapore / `新加坡`: `SG`, `Singapore`, `新加坡`
+- United States / `美国`: `US`, `USA`, `United States`, `America`, `LosAngeles`, `Los Angeles`, `美国`, `洛杉矶`
+
+Generate the node classification report:
+
+```bash
+python3 scripts/classify_nodes.py
+```
+
+The report is written to `output/node_groups_report.md`.
 
 ## Daily Maintenance
 
 1. Update nodes in `config/nodes.yaml`.
 2. Update routing rules in `config/rules.yaml`.
-3. Regenerate the output:
+3. Regenerate the outputs:
 
    ```bash
    python3 build.py
+   python3 scripts/classify_nodes.py
    ```
 
 4. Validate locally:

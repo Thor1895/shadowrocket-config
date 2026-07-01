@@ -1,5 +1,5 @@
 nodes:
-  - name: JP-Tokyo
+  - name: JP-Direct-Tokyo
     type: ss
     server: jp.example.com
     port: 8388
@@ -7,7 +7,7 @@ nodes:
     password: change-me-jp
     country: JP
 
-  - name: SG-Singapore
+  - name: SG-Direct-Singapore
     type: ss
     server: sg.example.com
     port: 8388
@@ -15,7 +15,7 @@ nodes:
     password: change-me-sg
     country: SG
 
-  - name: US-LosAngeles
+  - name: US-Direct-LosAngeles
     type: ss
     server: us.example.com
     port: 8388
@@ -23,10 +23,18 @@ nodes:
     password: change-me-us
     country: US
 
-  - name: HK-HongKong
+  - name: HK-Dedicated-HongKong
     type: ss
     server: hk.example.com
     port: 8388
     method: chacha20-ietf-poly1305
     password: change-me-hk
     country: HK
+
+  - name: MO-Relay-Macau
+    type: ss
+    server: mo.example.com
+    port: 8388
+    method: chacha20-ietf-poly1305
+    password: change-me-mo
+    country: MO

@@ -29,7 +29,24 @@ def test_ai_groups_are_independent_from_proxy() -> None:
     assert "PROXY" not in groups["OpenAI"]
     assert "PROXY" not in groups["Gemini"]
     assert "PROXY" not in groups["Claude"]
-    assert set(groups["OpenAI"]) == {"JP-Tokyo", "SG-Singapore", "US-LosAngeles"}
+    assert groups["OpenAI"] == ["JP-Direct-Tokyo", "SG-Direct-Singapore", "US-Direct-LosAngeles"]
+
+
+def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
+    output = build.build()
+    lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
+    groups = parse_groups(lines)
+
+    expected_nodes = {
+        "JP-Direct-Tokyo",
+        "SG-Direct-Singapore",
+        "US-Direct-LosAngeles",
+        "HK-Dedicated-HongKong",
+        "MO-Relay-Macau",
+    }
+    assert expected_nodes.issubset(set(groups["PROXY"]))
+    assert groups["Streaming"][0] == "HK-Dedicated-HongKong"
+    assert set(groups["Streaming"]) == expected_nodes
 
 
 def test_required_routes() -> None:
@@ -44,6 +61,8 @@ def test_required_routes() -> None:
     assert ("DOMAIN-SUFFIX", "meituan.com", "DIRECT") in rules
     assert ("DOMAIN-SUFFIX", "ele.me", "DIRECT") in rules
     assert ("DOMAIN-SUFFIX", "icbc.com.cn", "DIRECT") in rules
+    assert ("DOMAIN-SUFFIX", "netflix.com", "Streaming") in rules
+    assert ("DOMAIN-SUFFIX", "youtube.com", "Streaming") in rules
 
 
 def test_validate_script_rules_pass() -> None:

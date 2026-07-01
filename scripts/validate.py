@@ -5,10 +5,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from scripts.classify_nodes import load_nodes, openai_default_nodes, streaming_nodes
+
 OUTPUT = ROOT / "output" / "shadowrocket.conf"
 
 AI_GROUPS = {"OpenAI", "Gemini", "Claude"}
-OPENAI_ALLOWED_NODES = {"JP-Tokyo", "SG-Singapore", "US-LosAngeles"}
 DIRECT_DOMAINS = {
     "alipay.com",
     "alipayobjects.com",
@@ -82,8 +85,20 @@ def validate() -> None:
         if "PROXY" in members:
             raise AssertionError(f"{name} must not include PROXY")
 
-    if set(groups["OpenAI"]) - OPENAI_ALLOWED_NODES:
-        raise AssertionError("OpenAI group may only contain Japan, Singapore, and United States nodes")
+    nodes = load_nodes()
+    openai_nodes = openai_default_nodes(nodes)
+    if set(groups["OpenAI"]) - set(openai_nodes):
+        raise AssertionError("OpenAI group may only contain direct Japan, Singapore, and United States nodes")
+
+    if groups["OpenAI"] != openai_nodes:
+        raise AssertionError("OpenAI group must default to direct Japan, Singapore, and United States nodes")
+
+    streaming = groups.get("Streaming")
+    if not streaming:
+        raise AssertionError("missing or empty Streaming group")
+    expected_streaming_nodes = streaming_nodes(nodes)
+    if streaming != expected_streaming_nodes:
+        raise AssertionError("Streaming group must prefer dedicated nodes")
 
     for domain in ("xiaohongshu.com", "xhscdn.com"):
         if ("DOMAIN-SUFFIX", domain, "PROXY") not in rules:
@@ -99,6 +114,8 @@ def validate() -> None:
         ("gemini.google.com", "Gemini"),
         ("anthropic.com", "Claude"),
         ("claude.ai", "Claude"),
+        ("netflix.com", "Streaming"),
+        ("youtube.com", "Streaming"),
     ):
         if ("DOMAIN-SUFFIX", domain, target) not in rules:
             raise AssertionError(f"{domain} must route to {target}")
