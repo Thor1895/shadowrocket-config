@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T03:09:07.638012+00:00",
+  "generated_at": "2026-07-01T03:14:02.593535+00:00",
   "mode": "mock",
   "source": "config/nodes.yaml",
   "results": [
@@ -12,7 +12,11 @@
       "openai": true,
       "mode": "mock",
       "reason": "mock: direct JP/SG/US candidate",
-      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+      "checked_at": "2026-07-01T03:14:02.593144+00:00",
+      "chatgpt_reachable": true,
+      "api_reachable": null,
+      "error": null,
+      "latency_ms": null
     },
     {
       "name": "SG-Direct-Singapore",
@@ -23,7 +27,11 @@
       "openai": true,
       "mode": "mock",
       "reason": "mock: direct JP/SG/US candidate",
-      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+      "checked_at": "2026-07-01T03:14:02.593144+00:00",
+      "chatgpt_reachable": true,
+      "api_reachable": null,
+      "error": null,
+      "latency_ms": null
     },
     {
       "name": "US-Direct-LosAngeles",
@@ -34,7 +42,11 @@
       "openai": true,
       "mode": "mock",
       "reason": "mock: direct JP/SG/US candidate",
-      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+      "checked_at": "2026-07-01T03:14:02.593144+00:00",
+      "chatgpt_reachable": true,
+      "api_reachable": null,
+      "error": null,
+      "latency_ms": null
     },
     {
       "name": "HK-Dedicated-HongKong",
@@ -45,7 +57,11 @@
       "openai": false,
       "mode": "mock",
       "reason": "mock: not a direct JP/SG/US candidate",
-      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+      "checked_at": "2026-07-01T03:14:02.593144+00:00",
+      "chatgpt_reachable": false,
+      "api_reachable": null,
+      "error": "mock: not a direct JP/SG/US candidate",
+      "latency_ms": null
     },
     {
       "name": "MO-Relay-Macau",
@@ -56,7 +72,11 @@
       "openai": false,
       "mode": "mock",
       "reason": "mock: not a direct JP/SG/US candidate",
-      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+      "checked_at": "2026-07-01T03:14:02.593144+00:00",
+      "chatgpt_reachable": false,
+      "api_reachable": null,
+      "error": "mock: not a direct JP/SG/US candidate",
+      "latency_ms": null
     }
   ]
 }

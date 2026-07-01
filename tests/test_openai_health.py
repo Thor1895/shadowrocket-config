@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import build
+from scripts import check_openai
 from scripts.check_openai import check_nodes, load_candidate_names, write_health_files
 from scripts.validate import parse_groups
 
@@ -68,6 +69,11 @@ nodes:
     assert payload["results"][0]["openai"] is True
     assert payload["results"][1]["openai"] is False
     assert "| JP-Direct-Tokyo | true |" in md_path.read_text(encoding="utf-8")
+    assert payload["results"][0]["checked_at"]
+    assert payload["results"][0]["chatgpt_reachable"] is True
+    assert payload["results"][0]["api_reachable"] is None
+    assert payload["results"][0]["error"] is None
+    assert payload["results"][0]["latency_ms"] is None
 
 
 def test_openai_check_reads_node_report_markdown(tmp_path: Path) -> None:
@@ -94,3 +100,79 @@ def test_mock_check_nodes_marks_direct_jp_sg_us_as_openai_available() -> None:
 
     assert results[0]["openai"] is True
     assert results[1]["openai"] is False
+
+
+def test_mock_mode_output_is_stable(monkeypatch) -> None:
+    monkeypatch.setattr(check_openai, "now_iso", lambda: "2026-07-01T00:00:00+00:00")
+
+    results = check_nodes(["JP-Direct-Tokyo", "HK-Dedicated-HongKong"], mode="mock")
+
+    assert results == [
+        {
+            "name": "JP-Direct-Tokyo",
+            "categories": ["direct", "japan"],
+            "openai": True,
+            "mode": "mock",
+            "reason": "mock: direct JP/SG/US candidate",
+            "checked_at": "2026-07-01T00:00:00+00:00",
+            "chatgpt_reachable": True,
+            "api_reachable": None,
+            "error": None,
+            "latency_ms": None,
+        },
+        {
+            "name": "HK-Dedicated-HongKong",
+            "categories": ["dedicated", "hong_kong"],
+            "openai": False,
+            "mode": "mock",
+            "reason": "mock: not a direct JP/SG/US candidate",
+            "checked_at": "2026-07-01T00:00:00+00:00",
+            "chatgpt_reachable": False,
+            "api_reachable": None,
+            "error": "mock: not a direct JP/SG/US candidate",
+            "latency_ms": None,
+        },
+    ]
+
+
+def test_real_mode_uses_monkeypatched_network_requests(monkeypatch) -> None:
+    calls = []
+
+    def fake_request(url: str, timeout: float, headers=None):
+        calls.append((url, timeout, headers))
+        return True, 200, None
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(check_openai, "request_url", fake_request)
+    monkeypatch.setattr(check_openai, "now_iso", lambda: "2026-07-01T00:00:00+00:00")
+
+    results = check_nodes(["JP-Direct-Tokyo"], mode="real")
+
+    assert results[0]["openai"] is True
+    assert results[0]["chatgpt_reachable"] is True
+    assert results[0]["api_reachable"] is True
+    assert results[0]["error"] is None
+    assert results[0]["latency_ms"] >= 0
+    assert [call[0] for call in calls] == [
+        check_openai.CHATGPT_TRACE_URL,
+        check_openai.OPENAI_MODELS_URL,
+    ]
+    assert calls[1][2]["Authorization"] == "Bearer test-key"
+
+
+def test_real_mode_without_openai_api_key_skips_api_request(monkeypatch) -> None:
+    calls = []
+
+    def fake_request(url: str, timeout: float, headers=None):
+        calls.append(url)
+        return True, 200, None
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(check_openai, "request_url", fake_request)
+
+    results = check_nodes(["JP-Direct-Tokyo"], mode="real")
+
+    assert results[0]["openai"] is True
+    assert results[0]["chatgpt_reachable"] is True
+    assert results[0]["api_reachable"] is None
+    assert calls == [check_openai.CHATGPT_TRACE_URL]

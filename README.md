@@ -9,6 +9,7 @@ Python + YAML + Jinja2 based Shadowrocket configuration generator.
 GitHub Actions runs on every push to `main`:
 
 ```text
+python3 scripts/check_openai.py --mode mock
 python3 build.py
 python3 scripts/validate.py
 python3 -m pytest -q
@@ -121,7 +122,7 @@ The report is written to `output/node_groups_report.md`.
 OpenAI routing can use a generated health file:
 
 ```bash
-python3 scripts/check_openai.py
+python3 scripts/check_openai.py --mode mock
 python3 build.py
 ```
 
@@ -139,7 +140,29 @@ python3 scripts/check_openai.py --input output/node_groups_report.md
 python3 scripts/check_openai.py --input config/nodes.yaml
 ```
 
-This phase uses mock mode only. It does not open real proxy connections yet.
+Mock mode is the default:
+
+```bash
+python3 scripts/check_openai.py
+python3 scripts/check_openai.py --mode mock
+```
+
+Mock mode does not open real network connections. It marks direct Japan, Singapore, and United States nodes as `openai=true`, which gives the generator a deterministic baseline for local development and CI.
+
+Real mode performs direct access checks from the machine running the script:
+
+```bash
+python3 scripts/check_openai.py --mode real
+```
+
+Real mode requests:
+
+- `https://chatgpt.com/cdn-cgi/trace`
+- `https://api.openai.com/v1/models`, only when `OPENAI_API_KEY` is set
+
+`OPENAI_API_KEY` is optional. Without it, real mode only checks `chatgpt.com`; with it, the checker also verifies the OpenAI API endpoint.
+
+GitHub Actions intentionally uses mock mode. Real OpenAI checks depend on the runner's network, region, rate limits, API key availability, and transient service conditions, so CI should verify generator behavior without making release status depend on external connectivity.
 
 OpenAI does not use `url-test` automatic latency selection because latency is not the same as OpenAI availability. A low-latency node may still be blocked, challenged, region-mismatched, or unable to reach OpenAI services reliably. The explicit health file keeps OpenAI routing based on service availability rather than generic speed.
 
@@ -151,7 +174,7 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
 
    ```bash
    python3 scripts/classify_nodes.py
-   python3 scripts/check_openai.py
+   python3 scripts/check_openai.py --mode mock
    python3 build.py
    ```
 
