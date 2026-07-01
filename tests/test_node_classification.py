@@ -6,13 +6,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from scripts.classify_nodes import (
+from core.classifier import (
+    ai_fallback_nodes,
     classify_node_name,
-    load_nodes,
-    openai_default_nodes,
-    streaming_nodes,
+    premium_nodes_first,
     write_report,
 )
+from services.rule_loader import load_nodes
 
 
 def test_classify_node_name_recognizes_type_and_region() -> None:
@@ -26,7 +26,7 @@ def test_classify_node_name_recognizes_type_and_region() -> None:
 def test_openai_defaults_to_direct_jp_sg_us_nodes() -> None:
     nodes = load_nodes()
 
-    assert openai_default_nodes(nodes) == [
+    assert ai_fallback_nodes(nodes) == [
         "JP-Direct-Tokyo",
         "SG-Direct-Singapore",
         "US-Direct-LosAngeles",
@@ -35,7 +35,7 @@ def test_openai_defaults_to_direct_jp_sg_us_nodes() -> None:
 
 def test_streaming_prefers_dedicated_nodes() -> None:
     nodes = load_nodes()
-    members = streaming_nodes(nodes)
+    members = premium_nodes_first(nodes)
 
     assert members[0] == "HK-Dedicated-HongKong"
     assert set(members) == {node["name"] for node in nodes}

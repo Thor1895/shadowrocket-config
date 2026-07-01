@@ -33,6 +33,9 @@ jobs:
       - name: Validate config
         run: python3 scripts/validate.py
 
+      - name: Check architecture complexity
+        run: python3 scripts/complexity_check.py
+
       - name: Run tests
         run: python3 -m pytest -q
 

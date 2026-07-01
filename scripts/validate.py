@@ -7,12 +7,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from build import NODE_SCORE_FILE, select_ai_nodes
-from scripts.classify_nodes import load_nodes, streaming_nodes
+from core.constants import AI_SERVICES, NODE_SCORE_FILE, SHADOWROCKET_FILE
+from core.router import route
+from services.rule_loader import load_nodes
 
-OUTPUT = ROOT / "output" / "shadowrocket.conf"
+OUTPUT = SHADOWROCKET_FILE
 
-AI_GROUPS = {"OpenAI", "Gemini", "Claude"}
+AI_GROUPS = AI_SERVICES
 DIRECT_DOMAINS = {
     "alipay.com",
     "alipayobjects.com",
@@ -87,7 +88,7 @@ def validate() -> None:
             raise AssertionError(f"{name} must not include PROXY")
 
     nodes = load_nodes()
-    selected_ai_nodes = select_ai_nodes(nodes, NODE_SCORE_FILE)
+    selected_ai_nodes = route("OpenAI", nodes, score_path=NODE_SCORE_FILE)
     for name in AI_GROUPS:
         if groups[name] != selected_ai_nodes:
             raise AssertionError(f"{name} group must match scored top AI nodes")
@@ -95,7 +96,7 @@ def validate() -> None:
     streaming = groups.get("Streaming")
     if not streaming:
         raise AssertionError("missing or empty Streaming group")
-    expected_streaming_nodes = streaming_nodes(nodes)
+    expected_streaming_nodes = route("Streaming", nodes, score_path=NODE_SCORE_FILE)
     if streaming != expected_streaming_nodes:
         raise AssertionError("Streaming group must prefer dedicated nodes")
 

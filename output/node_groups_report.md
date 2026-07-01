@@ -1,6 +1,6 @@
 # Node Groups Report
 
-Generated from `config/nodes.yaml` by `scripts/classify_nodes.py`.
+Generated from `data/nodes.yaml` by `core.classifier`.
 
 ## Direct / 直连
 - JP-Direct-Tokyo

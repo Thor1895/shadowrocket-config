@@ -7,9 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import build
-from scripts import node_scorer
-from scripts.classify_nodes import load_nodes
+from core import scorer as node_scorer
+from services.rule_loader import load_nodes
 
 
 def test_scoring_output_is_stable_for_mock_health() -> None:
@@ -65,10 +64,10 @@ def test_write_scores_outputs_top_nodes(tmp_path: Path, monkeypatch) -> None:
     assert payload["results"][0]["score"] >= payload["results"][1]["score"]
 
 
-def test_build_ai_selection_falls_back_without_score_file(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(build, "NODE_SCORE_FILE", tmp_path / "missing_node_score.json")
+def test_build_ai_selection_falls_back_without_score_file(tmp_path: Path) -> None:
+    from core.router import ai_nodes
 
-    assert build.select_ai_nodes(load_nodes()) == [
+    assert ai_nodes(load_nodes(), score_path=tmp_path / "missing_node_score.json") == [
         "JP-Direct-Tokyo",
         "SG-Direct-Singapore",
         "US-Direct-LosAngeles",

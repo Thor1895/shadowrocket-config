@@ -1,6 +1,6 @@
 # OpenAI Health
 
-- Source: `config/nodes.yaml`
+- Source: `data/nodes.yaml`
 - Mode: `mock`
 
 | Node | OpenAI | ChatGPT | API | Latency ms | Categories | Error |

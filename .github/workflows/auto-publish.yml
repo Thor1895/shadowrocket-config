@@ -41,6 +41,9 @@ jobs:
       - name: Validate generated config
         run: python3 scripts/validate.py
 
+      - name: Check architecture complexity
+        run: python3 scripts/complexity_check.py
+
       - name: Generate release metadata
         run: python3 scripts/release_meta.py
 

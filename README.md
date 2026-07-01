@@ -13,6 +13,7 @@ python3 scripts/check_openai.py --mode mock
 python3 scripts/node_scorer.py
 python3 build.py
 python3 scripts/validate.py
+python3 scripts/complexity_check.py
 python3 -m pytest -q
 ```
 
@@ -25,13 +26,26 @@ The auto-publish workflow also runs on pushes to `main`. When `python3 build.py`
 ```text
 .
 ├── build.py
-├── config/
+├── core/
+│   ├── classifier.py
+│   ├── constants.py
+│   ├── router.py
+│   └── scorer.py
+├── data/
 │   ├── nodes.yaml
 │   ├── rules.yaml
 │   └── settings.yaml
+├── jobs/
+│   ├── build.py
+│   └── release.py
+├── services/
+│   ├── node_health.py
+│   ├── openai_health.py
+│   └── rule_loader.py
 ├── templates/
 │   └── shadowrocket.conf.j2
 ├── scripts/
+│   ├── complexity_check.py
 │   └── validate.py
 ├── tests/
 │   └── test_build.py
@@ -110,7 +124,7 @@ The version strategy is intentionally simple: each generated subscription versio
 
 ## Node Naming Rules
 
-Node classification is inferred from each node's `name` in `config/nodes.yaml`.
+Node classification is inferred from each node's `name` in `data/nodes.yaml`.
 
 Recommended format:
 
@@ -170,7 +184,7 @@ The checker also accepts a node sample list or the classification report:
 
 ```bash
 python3 scripts/check_openai.py --input output/node_groups_report.md
-python3 scripts/check_openai.py --input config/nodes.yaml
+python3 scripts/check_openai.py --input data/nodes.yaml
 ```
 
 Mock mode is the default:
@@ -221,10 +235,23 @@ Scoring is more reliable than Shadowrocket `url-test` for AI routes because `url
 
 AI routing must be dynamic because provider access changes by region, ASN, IP reputation, and time. The score file lets the repository update routing decisions from measured health data while keeping the subscription URL stable.
 
+## Architecture Boundaries
+
+The production code is split by responsibility:
+
+- `core/router.py`: final route decision engine for `OpenAI`, `Gemini`, `Claude`, `PROXY`, `Streaming`, bank, and China app routing.
+- `core/scorer.py`: the only scoring engine.
+- `core/classifier.py`: node name classification.
+- `services/openai_health.py` and `services/node_health.py`: health data providers.
+- `services/rule_loader.py`: YAML loading.
+- `jobs/build.py`: orchestration layer that loads inputs, calls router/scorer/classifier through their public APIs, and renders the template.
+
+`scripts/complexity_check.py` enforces those boundaries in CI. It fails when routing leaks into build entrypoints, scoring leaks into router, duplicate rule-sets appear, or another scoring system is introduced.
+
 ## Daily Maintenance
 
-1. Update nodes in `config/nodes.yaml`.
-2. Update routing rules in `config/rules.yaml`.
+1. Update nodes in `data/nodes.yaml`.
+2. Update routing rules in `data/rules.yaml`.
 3. Regenerate the outputs:
 
    ```bash
@@ -242,7 +269,7 @@ AI routing must be dynamic because provider access changes by region, ASN, IP re
    python3 -m pytest -q
    ```
 
-5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`, `output/node_score.json`, and `output/latest.json`.
+5. Commit source changes under `data/`, `core/`, `services/`, `jobs/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`, `output/node_score.json`, and `output/latest.json`.
 6. Push to `main` and confirm the GitHub Actions run passes.
 
 ## Generated Output Policy

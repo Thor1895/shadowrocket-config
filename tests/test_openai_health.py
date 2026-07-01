@@ -8,8 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import build
-from scripts import check_openai
-from scripts.check_openai import check_nodes, load_candidate_names, write_health_files
+from jobs import build as build_job
+from services import openai_health as check_openai
+from services.openai_health import check_nodes, load_candidate_names, write_health_files
 from scripts.validate import parse_groups
 
 
@@ -33,7 +34,7 @@ def test_build_prefers_top_nodes_from_score_file(tmp_path: Path, monkeypatch) ->
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(build, "NODE_SCORE_FILE", score_path)
+    monkeypatch.setattr(build_job, "NODE_SCORE_FILE", score_path)
 
     output = build.build()
     groups = _groups_from_output(output)
@@ -45,7 +46,7 @@ def test_build_prefers_top_nodes_from_score_file(tmp_path: Path, monkeypatch) ->
 
 
 def test_build_falls_back_to_default_ai_candidates_without_score_file(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(build, "NODE_SCORE_FILE", tmp_path / "missing_node_score.json")
+    monkeypatch.setattr(build_job, "NODE_SCORE_FILE", tmp_path / "missing_node_score.json")
 
     output = build.build()
     groups = _groups_from_output(output)
