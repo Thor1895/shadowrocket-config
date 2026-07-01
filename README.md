@@ -10,6 +10,7 @@ GitHub Actions runs on every push to `main`:
 
 ```text
 python3 scripts/check_openai.py --mode mock
+python3 scripts/node_scorer.py
 python3 build.py
 python3 scripts/validate.py
 python3 -m pytest -q
@@ -198,6 +199,28 @@ GitHub Actions intentionally uses mock mode. Real OpenAI checks depend on the ru
 
 OpenAI does not use `url-test` automatic latency selection because latency is not the same as OpenAI availability. A low-latency node may still be blocked, challenged, region-mismatched, or unable to reach OpenAI services reliably. The explicit health file keeps OpenAI routing based on service availability rather than generic speed.
 
+## Node Scoring
+
+AI routing is score driven. Generate scores with:
+
+```bash
+python3 scripts/node_scorer.py
+```
+
+The scorer writes `output/node_score.json` and ranks nodes with these dimensions:
+
+- `latency_ms`
+- `openai_success_rate`
+- `tls_connect_success`
+- `packet_loss`
+- `region_penalty`, which lowers Hong Kong and Macau nodes for AI routing
+
+`build.py` reads `output/node_score.json` and assigns the top 3 nodes to `OpenAI`, `Gemini`, and `Claude`. If the score file is missing, the generator falls back to direct Japan, Singapore, and United States candidates so a clean checkout can still build.
+
+Scoring is more reliable than Shadowrocket `url-test` for AI routes because `url-test` only measures generic endpoint latency. AI services need more context: service reachability, TLS success, recent OpenAI health, packet loss, and region risk. A fast node can still be a bad AI node if it is blocked, challenged, or unstable for the target service.
+
+AI routing must be dynamic because provider access changes by region, ASN, IP reputation, and time. The score file lets the repository update routing decisions from measured health data while keeping the subscription URL stable.
+
 ## Daily Maintenance
 
 1. Update nodes in `config/nodes.yaml`.
@@ -207,6 +230,7 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
    ```bash
    python3 scripts/classify_nodes.py
    python3 scripts/check_openai.py --mode mock
+   python3 scripts/node_scorer.py
    python3 build.py
    python3 scripts/release_meta.py
    ```
@@ -218,7 +242,7 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
    python3 -m pytest -q
    ```
 
-5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf` and `output/latest.json`.
+5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`, `output/node_score.json`, and `output/latest.json`.
 6. Push to `main` and confirm the GitHub Actions run passes.
 
 ## Generated Output Policy

@@ -7,8 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from build import OPENAI_HEALTH_FILE, select_openai_nodes
-from scripts.classify_nodes import load_nodes, openai_default_nodes, streaming_nodes
+from build import NODE_SCORE_FILE, select_ai_nodes
+from scripts.classify_nodes import load_nodes, streaming_nodes
 
 OUTPUT = ROOT / "output" / "shadowrocket.conf"
 
@@ -87,14 +87,10 @@ def validate() -> None:
             raise AssertionError(f"{name} must not include PROXY")
 
     nodes = load_nodes()
-    fallback_openai_nodes = openai_default_nodes(nodes)
-    selected_openai_nodes = select_openai_nodes(nodes, OPENAI_HEALTH_FILE)
-    allowed_openai_nodes = set(fallback_openai_nodes) | set(selected_openai_nodes)
-    if set(groups["OpenAI"]) - allowed_openai_nodes:
-        raise AssertionError("OpenAI group contains nodes outside health-checked or default candidates")
-
-    if groups["OpenAI"] != selected_openai_nodes:
-        raise AssertionError("OpenAI group must match health-checked nodes or default candidates")
+    selected_ai_nodes = select_ai_nodes(nodes, NODE_SCORE_FILE)
+    for name in AI_GROUPS:
+        if groups[name] != selected_ai_nodes:
+            raise AssertionError(f"{name} group must match scored top AI nodes")
 
     streaming = groups.get("Streaming")
     if not streaming:

@@ -18,35 +18,41 @@ def _groups_from_output(path: Path) -> dict[str, list[str]]:
     return parse_groups(lines)
 
 
-def test_build_prefers_openai_true_nodes_from_health_file(tmp_path: Path, monkeypatch) -> None:
-    health_path = tmp_path / "openai_health.json"
-    health_path.write_text(
+def test_build_prefers_top_nodes_from_score_file(tmp_path: Path, monkeypatch) -> None:
+    score_path = tmp_path / "node_score.json"
+    score_path.write_text(
         json.dumps(
             {
+                "top_nodes": ["HK-Dedicated-HongKong", "MO-Relay-Macau", "JP-Direct-Tokyo"],
                 "results": [
-                    {"name": "JP-Direct-Tokyo", "openai": False},
-                    {"name": "HK-Dedicated-HongKong", "openai": True},
-                    {"name": "Unknown-Node", "openai": True},
+                    {"name": "HK-Dedicated-HongKong", "score": 99},
+                    {"name": "MO-Relay-Macau", "score": 98},
+                    {"name": "JP-Direct-Tokyo", "score": 97},
                 ]
             }
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(build, "OPENAI_HEALTH_FILE", health_path)
+    monkeypatch.setattr(build, "NODE_SCORE_FILE", score_path)
 
     output = build.build()
     groups = _groups_from_output(output)
 
-    assert groups["OpenAI"] == ["HK-Dedicated-HongKong"]
+    expected = ["HK-Dedicated-HongKong", "MO-Relay-Macau", "JP-Direct-Tokyo"]
+    assert groups["OpenAI"] == expected
+    assert groups["Gemini"] == expected
+    assert groups["Claude"] == expected
 
 
-def test_build_falls_back_to_default_openai_candidates_without_health_file(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(build, "OPENAI_HEALTH_FILE", tmp_path / "missing_openai_health.json")
+def test_build_falls_back_to_default_ai_candidates_without_score_file(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(build, "NODE_SCORE_FILE", tmp_path / "missing_node_score.json")
 
     output = build.build()
     groups = _groups_from_output(output)
 
     assert groups["OpenAI"] == ["JP-Direct-Tokyo", "SG-Direct-Singapore", "US-Direct-LosAngeles"]
+    assert groups["Gemini"] == groups["OpenAI"]
+    assert groups["Claude"] == groups["OpenAI"]
 
 
 def test_mock_openai_check_writes_json_and_markdown(tmp_path: Path) -> None:
@@ -118,6 +124,10 @@ def test_mock_mode_output_is_stable(monkeypatch) -> None:
             "chatgpt_reachable": True,
             "api_reachable": None,
             "error": None,
+            "success_rate": 1.0,
+            "failure_reasons": [],
+            "latency_histogram": [],
+            "tls_connect_success": True,
             "latency_ms": None,
         },
         {
@@ -130,6 +140,10 @@ def test_mock_mode_output_is_stable(monkeypatch) -> None:
             "chatgpt_reachable": False,
             "api_reachable": None,
             "error": "mock: not a direct JP/SG/US candidate",
+            "success_rate": 0.0,
+            "failure_reasons": ["mock: not a direct JP/SG/US candidate"],
+            "latency_histogram": [],
+            "tls_connect_success": False,
             "latency_ms": None,
         },
     ]
@@ -152,6 +166,10 @@ def test_real_mode_uses_monkeypatched_network_requests(monkeypatch) -> None:
     assert results[0]["chatgpt_reachable"] is True
     assert results[0]["api_reachable"] is True
     assert results[0]["error"] is None
+    assert results[0]["success_rate"] == 1.0
+    assert results[0]["failure_reasons"] == []
+    assert len(results[0]["latency_histogram"]) == 2
+    assert results[0]["tls_connect_success"] is True
     assert results[0]["latency_ms"] >= 0
     assert [call[0] for call in calls] == [
         check_openai.CHATGPT_TRACE_URL,
@@ -175,4 +193,6 @@ def test_real_mode_without_openai_api_key_skips_api_request(monkeypatch) -> None
     assert results[0]["openai"] is True
     assert results[0]["chatgpt_reachable"] is True
     assert results[0]["api_reachable"] is None
+    assert results[0]["success_rate"] == 1.0
+    assert len(results[0]["latency_histogram"]) == 1
     assert calls == [check_openai.CHATGPT_TRACE_URL]

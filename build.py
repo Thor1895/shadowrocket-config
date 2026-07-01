@@ -9,6 +9,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from scripts.classify_nodes import openai_default_nodes, streaming_nodes
+from scripts.node_scorer import load_top_nodes
 
 
 ROOT = Path(__file__).resolve().parent
@@ -17,6 +18,7 @@ TEMPLATE_DIR = ROOT / "templates"
 OUTPUT_DIR = ROOT / "output"
 OUTPUT_FILE = OUTPUT_DIR / "shadowrocket.conf"
 OPENAI_HEALTH_FILE = OUTPUT_DIR / "openai_health.json"
+NODE_SCORE_FILE = OUTPUT_DIR / "node_score.json"
 
 
 def load_yaml(path: Path) -> Any:
@@ -48,6 +50,15 @@ def select_openai_nodes(nodes: list[dict[str, Any]], health_path: Path | None = 
     return openai_default_nodes(nodes)
 
 
+def select_ai_nodes(nodes: list[dict[str, Any]], score_path: Path | None = None, limit: int = 3) -> list[str]:
+    score_path = score_path or NODE_SCORE_FILE
+    node_names = {node["name"] for node in nodes}
+    scored_nodes = [name for name in load_top_nodes(score_path, limit=limit) if name in node_names]
+    if scored_nodes:
+        return scored_nodes
+    return openai_default_nodes(nodes)[:limit]
+
+
 def load_config() -> dict[str, Any]:
     nodes_config = load_yaml(CONFIG_DIR / "nodes.yaml")
     rules_config = load_yaml(CONFIG_DIR / "rules.yaml")
@@ -56,9 +67,9 @@ def load_config() -> dict[str, Any]:
     nodes = nodes_config["nodes"]
     node_by_name = {node["name"]: node for node in nodes}
 
-    openai_nodes = select_openai_nodes(nodes)
-    if not openai_nodes:
-        raise ValueError("OpenAI group needs at least one direct JP, SG, or US node")
+    ai_nodes = select_ai_nodes(nodes)
+    if not ai_nodes:
+        raise ValueError("AI groups need at least one scored or fallback node")
 
     groups = [
         {
@@ -69,7 +80,7 @@ def load_config() -> dict[str, Any]:
         {
             "name": "OpenAI",
             "type": "select",
-            "members": openai_nodes,
+            "members": ai_nodes,
         },
         {
             "name": "Streaming",
@@ -79,12 +90,12 @@ def load_config() -> dict[str, Any]:
         {
             "name": "Gemini",
             "type": "select",
-            "members": [node["name"] for node in nodes],
+            "members": ai_nodes,
         },
         {
             "name": "Claude",
             "type": "select",
-            "members": [node["name"] for node in nodes],
+            "members": ai_nodes,
         },
     ]
 

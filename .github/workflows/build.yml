@@ -24,6 +24,9 @@ jobs:
       - name: Generate mock OpenAI health
         run: python3 scripts/check_openai.py --mode mock
 
+      - name: Score nodes
+        run: python3 scripts/node_scorer.py
+
       - name: Build config
         run: python3 build.py
 

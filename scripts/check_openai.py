@@ -100,24 +100,32 @@ def request_url(url: str, timeout: float, headers: dict[str, str] | None = None)
 def real_check_node(name: str, timeout: float = DEFAULT_TIMEOUT_SECONDS) -> dict[str, Any]:
     started = time.monotonic()
     errors: list[str] = []
+    latency_histogram: list[int] = []
+    attempted_checks = 1
 
+    chatgpt_started = time.monotonic()
     chatgpt_reachable, _, chatgpt_error = request_url(CHATGPT_TRACE_URL, timeout=timeout)
+    latency_histogram.append(round((time.monotonic() - chatgpt_started) * 1000))
     if chatgpt_error:
         errors.append(f"chatgpt.com: {chatgpt_error}")
 
     api_reachable: bool | None = None
     api_key = os.environ.get("OPENAI_API_KEY")
     if api_key:
+        attempted_checks += 1
         headers = {
             "Authorization": f"Bearer {api_key}",
             "User-Agent": "shadowrocket-config-openai-check/1.0",
         }
+        api_started = time.monotonic()
         api_reachable, _, api_error = request_url(OPENAI_MODELS_URL, timeout=timeout, headers=headers)
+        latency_histogram.append(round((time.monotonic() - api_started) * 1000))
         if api_error:
             errors.append(f"api.openai.com: {api_error}")
 
     latency_ms = round((time.monotonic() - started) * 1000)
     openai_available = chatgpt_reachable if api_reachable is None else chatgpt_reachable and api_reachable
+    successful_checks = int(chatgpt_reachable) + (int(api_reachable) if api_reachable is not None else 0)
     return {
         "name": name,
         "categories": sorted(classify_node_name(name)),
@@ -128,12 +136,17 @@ def real_check_node(name: str, timeout: float = DEFAULT_TIMEOUT_SECONDS) -> dict
         "chatgpt_reachable": chatgpt_reachable,
         "api_reachable": api_reachable,
         "error": "; ".join(errors) if errors else None,
+        "success_rate": round(successful_checks / attempted_checks, 4),
+        "failure_reasons": errors,
+        "latency_histogram": latency_histogram,
+        "tls_connect_success": chatgpt_reachable or bool(api_reachable),
         "latency_ms": latency_ms,
     }
 
 
 def mock_result_for_node(name: str, checked_at: str) -> dict[str, Any]:
     available, reason = mock_check_node(name)
+    failure_reasons = [] if available else [reason]
     return {
         "name": name,
         "categories": sorted(classify_node_name(name)),
@@ -144,6 +157,10 @@ def mock_result_for_node(name: str, checked_at: str) -> dict[str, Any]:
         "chatgpt_reachable": available,
         "api_reachable": None,
         "error": None if available else reason,
+        "success_rate": 1.0 if available else 0.0,
+        "failure_reasons": failure_reasons,
+        "latency_histogram": [],
+        "tls_connect_success": available,
         "latency_ms": None,
     }
 

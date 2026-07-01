@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-07-01T09:07:50.137459+00:00",
+  "source": "output/openai_health.json",
+  "top_nodes": [
+    "JP-Direct-Tokyo",
+    "SG-Direct-Singapore",
+    "US-Direct-LosAngeles"
+  ],
+  "results": [
+    {
+      "name": "JP-Direct-Tokyo",
+      "score": 86.8,
+      "categories": [
+        "direct",
+        "japan"
+      ],
+      "latency_ms": 80,
+      "openai_success_rate": 1.0,
+      "tls_connect_success": true,
+      "packet_loss": 0.02,
+      "region_penalty": 0
+    },
+    {
+      "name": "SG-Direct-Singapore",
+      "score": 85.8,
+      "categories": [
+        "direct",
+        "singapore"
+      ],
+      "latency_ms": 90,
+      "openai_success_rate": 1.0,
+      "tls_connect_success": true,
+      "packet_loss": 0.02,
+      "region_penalty": 0
+    },
+    {
+      "name": "US-Direct-LosAngeles",
+      "score": 82.7,
+      "categories": [
+        "direct",
+        "united_states"
+      ],
+      "latency_ms": 120,
+      "openai_success_rate": 1.0,
+      "tls_connect_success": true,
+      "packet_loss": 0.03,
+      "region_penalty": 0
+    },
+    {
+      "name": "HK-Dedicated-HongKong",
+      "score": 20.0,
+      "categories": [
+        "dedicated",
+        "hong_kong"
+      ],
+      "latency_ms": 45,
+      "openai_success_rate": 0.0,
+      "tls_connect_success": false,
+      "packet_loss": 0.05,
+      "region_penalty": 20
+    },
+    {
+      "name": "MO-Relay-Macau",
+      "score": 13.4,
+      "categories": [
+        "macau",
+        "relay"
+      ],
+      "latency_ms": 60,
+      "openai_success_rate": 0.0,
+      "tls_connect_success": false,
+      "packet_loss": 0.06,
+      "region_penalty": 25
+    }
+  ]
+}
