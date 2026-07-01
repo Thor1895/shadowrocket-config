@@ -1,0 +1,38 @@
+name: Build Shadowrocket Config
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Build config
+        run: python3 build.py
+
+      - name: Validate config
+        run: python3 scripts/validate.py
+
+      - name: Run tests
+        run: python3 -m pytest -q
+
+      - name: Upload generated config
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowrocket.conf
+          path: output/shadowrocket.conf
+          if-no-files-found: error
