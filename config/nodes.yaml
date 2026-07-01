@@ -1,0 +1,32 @@
+nodes:
+  - name: JP-Tokyo
+    type: ss
+    server: jp.example.com
+    port: 8388
+    method: chacha20-ietf-poly1305
+    password: change-me-jp
+    country: JP
+
+  - name: SG-Singapore
+    type: ss
+    server: sg.example.com
+    port: 8388
+    method: chacha20-ietf-poly1305
+    password: change-me-sg
+    country: SG
+
+  - name: US-LosAngeles
+    type: ss
+    server: us.example.com
+    port: 8388
+    method: chacha20-ietf-poly1305
+    password: change-me-us
+    country: US
+
+  - name: HK-HongKong
+    type: ss
+    server: hk.example.com
+    port: 8388
+    method: chacha20-ietf-poly1305
+    password: change-me-hk
+    country: HK

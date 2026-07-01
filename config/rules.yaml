@@ -1,0 +1,68 @@
+rules:
+  - name: OpenAI
+    target: OpenAI
+    items:
+      - DOMAIN-SUFFIX,openai.com,OpenAI
+      - DOMAIN-SUFFIX,chatgpt.com,OpenAI
+      - DOMAIN-SUFFIX,oaistatic.com,OpenAI
+      - DOMAIN-SUFFIX,oaiusercontent.com,OpenAI
+      - DOMAIN-SUFFIX,ai.com,OpenAI
+
+  - name: Gemini
+    target: Gemini
+    items:
+      - DOMAIN-SUFFIX,gemini.google.com,Gemini
+      - DOMAIN-SUFFIX,generativelanguage.googleapis.com,Gemini
+      - DOMAIN-SUFFIX,bard.google.com,Gemini
+
+  - name: Claude
+    target: Claude
+    items:
+      - DOMAIN-SUFFIX,anthropic.com,Claude
+      - DOMAIN-SUFFIX,claude.ai,Claude
+
+  - name: Xiaohongshu
+    target: PROXY
+    items:
+      - DOMAIN-SUFFIX,xiaohongshu.com,PROXY
+      - DOMAIN-SUFFIX,xhscdn.com,PROXY
+      - DOMAIN-KEYWORD,xiaohongshu,PROXY
+
+  - name: China Apps
+    target: DIRECT
+    items:
+      - DOMAIN-SUFFIX,alipay.com,DIRECT
+      - DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+      - DOMAIN-SUFFIX,antfin.com,DIRECT
+      - DOMAIN-SUFFIX,wechat.com,DIRECT
+      - DOMAIN-SUFFIX,weixin.qq.com,DIRECT
+      - DOMAIN-SUFFIX,qq.com,DIRECT
+      - DOMAIN-SUFFIX,amap.com,DIRECT
+      - DOMAIN-SUFFIX,autonavi.com,DIRECT
+      - DOMAIN-SUFFIX,meituan.com,DIRECT
+      - DOMAIN-SUFFIX,dianping.com,DIRECT
+      - DOMAIN-SUFFIX,ele.me,DIRECT
+      - DOMAIN-SUFFIX,elemecdn.com,DIRECT
+
+  - name: Banks
+    target: DIRECT
+    items:
+      - DOMAIN-SUFFIX,icbc.com.cn,DIRECT
+      - DOMAIN-SUFFIX,ccb.com,DIRECT
+      - DOMAIN-SUFFIX,abchina.com,DIRECT
+      - DOMAIN-SUFFIX,boc.cn,DIRECT
+      - DOMAIN-SUFFIX,bankcomm.com,DIRECT
+      - DOMAIN-SUFFIX,cmbchina.com,DIRECT
+      - DOMAIN-SUFFIX,psbc.com,DIRECT
+      - DOMAIN-SUFFIX,spdb.com.cn,DIRECT
+      - DOMAIN-SUFFIX,cib.com.cn,DIRECT
+
+  - name: Mainland
+    target: DIRECT
+    items:
+      - GEOIP,CN,DIRECT
+
+  - name: Final
+    target: PROXY
+    items:
+      - FINAL,PROXY
