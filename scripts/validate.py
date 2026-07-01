@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from build import OPENAI_HEALTH_FILE, select_openai_nodes
 from scripts.classify_nodes import load_nodes, openai_default_nodes, streaming_nodes
 
 OUTPUT = ROOT / "output" / "shadowrocket.conf"
@@ -86,12 +87,14 @@ def validate() -> None:
             raise AssertionError(f"{name} must not include PROXY")
 
     nodes = load_nodes()
-    openai_nodes = openai_default_nodes(nodes)
-    if set(groups["OpenAI"]) - set(openai_nodes):
-        raise AssertionError("OpenAI group may only contain direct Japan, Singapore, and United States nodes")
+    fallback_openai_nodes = openai_default_nodes(nodes)
+    selected_openai_nodes = select_openai_nodes(nodes, OPENAI_HEALTH_FILE)
+    allowed_openai_nodes = set(fallback_openai_nodes) | set(selected_openai_nodes)
+    if set(groups["OpenAI"]) - allowed_openai_nodes:
+        raise AssertionError("OpenAI group contains nodes outside health-checked or default candidates")
 
-    if groups["OpenAI"] != openai_nodes:
-        raise AssertionError("OpenAI group must default to direct Japan, Singapore, and United States nodes")
+    if groups["OpenAI"] != selected_openai_nodes:
+        raise AssertionError("OpenAI group must match health-checked nodes or default candidates")
 
     streaming = groups.get("Streaming")
     if not streaming:

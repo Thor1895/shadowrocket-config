@@ -14,11 +14,36 @@ CONFIG_DIR = ROOT / "config"
 TEMPLATE_DIR = ROOT / "templates"
 OUTPUT_DIR = ROOT / "output"
 OUTPUT_FILE = OUTPUT_DIR / "shadowrocket.conf"
+OPENAI_HEALTH_FILE = OUTPUT_DIR / "openai_health.json"
 
 
 def load_yaml(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
+
+def openai_nodes_from_health(nodes: list[dict[str, Any]], health_path: Path | None = None) -> list[str]:
+    health_path = health_path or OPENAI_HEALTH_FILE
+    if not health_path.exists():
+        return []
+
+    node_names = {node["name"] for node in nodes}
+    payload = yaml.safe_load(health_path.read_text(encoding="utf-8"))
+    results = payload.get("results", []) if isinstance(payload, dict) else []
+    return [
+        result["name"]
+        for result in results
+        if isinstance(result, dict)
+        and result.get("openai") is True
+        and result.get("name") in node_names
+    ]
+
+
+def select_openai_nodes(nodes: list[dict[str, Any]], health_path: Path | None = None) -> list[str]:
+    healthy_nodes = openai_nodes_from_health(nodes, health_path)
+    if healthy_nodes:
+        return healthy_nodes
+    return openai_default_nodes(nodes)
 
 
 def load_config() -> dict[str, Any]:
@@ -29,7 +54,7 @@ def load_config() -> dict[str, Any]:
     nodes = nodes_config["nodes"]
     node_by_name = {node["name"]: node for node in nodes}
 
-    openai_nodes = openai_default_nodes(nodes)
+    openai_nodes = select_openai_nodes(nodes)
     if not openai_nodes:
         raise ValueError("OpenAI group needs at least one direct JP, SG, or US node")
 

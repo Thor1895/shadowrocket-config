@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-07-01T03:09:07.638012+00:00",
+  "mode": "mock",
+  "source": "config/nodes.yaml",
+  "results": [
+    {
+      "name": "JP-Direct-Tokyo",
+      "categories": [
+        "direct",
+        "japan"
+      ],
+      "openai": true,
+      "mode": "mock",
+      "reason": "mock: direct JP/SG/US candidate",
+      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+    },
+    {
+      "name": "SG-Direct-Singapore",
+      "categories": [
+        "direct",
+        "singapore"
+      ],
+      "openai": true,
+      "mode": "mock",
+      "reason": "mock: direct JP/SG/US candidate",
+      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+    },
+    {
+      "name": "US-Direct-LosAngeles",
+      "categories": [
+        "direct",
+        "united_states"
+      ],
+      "openai": true,
+      "mode": "mock",
+      "reason": "mock: direct JP/SG/US candidate",
+      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+    },
+    {
+      "name": "HK-Dedicated-HongKong",
+      "categories": [
+        "dedicated",
+        "hong_kong"
+      ],
+      "openai": false,
+      "mode": "mock",
+      "reason": "mock: not a direct JP/SG/US candidate",
+      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+    },
+    {
+      "name": "MO-Relay-Macau",
+      "categories": [
+        "macau",
+        "relay"
+      ],
+      "openai": false,
+      "mode": "mock",
+      "reason": "mock: not a direct JP/SG/US candidate",
+      "checked_at": "2026-07-01T03:09:07.637119+00:00"
+    }
+  ]
+}

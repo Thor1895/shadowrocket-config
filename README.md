@@ -116,6 +116,33 @@ python3 scripts/classify_nodes.py
 
 The report is written to `output/node_groups_report.md`.
 
+## OpenAI Health Check
+
+OpenAI routing can use a generated health file:
+
+```bash
+python3 scripts/check_openai.py
+python3 build.py
+```
+
+The first command writes:
+
+- `output/openai_health.json`
+- `output/openai_health.md`
+
+When `output/openai_health.json` exists, `build.py` puts nodes with `openai=true` into the `OpenAI` group first. If the health file is missing or has no usable `openai=true` nodes, the build falls back to direct Japan, Singapore, and United States candidates.
+
+The checker also accepts a node sample list or the classification report:
+
+```bash
+python3 scripts/check_openai.py --input output/node_groups_report.md
+python3 scripts/check_openai.py --input config/nodes.yaml
+```
+
+This phase uses mock mode only. It does not open real proxy connections yet.
+
+OpenAI does not use `url-test` automatic latency selection because latency is not the same as OpenAI availability. A low-latency node may still be blocked, challenged, region-mismatched, or unable to reach OpenAI services reliably. The explicit health file keeps OpenAI routing based on service availability rather than generic speed.
+
 ## Daily Maintenance
 
 1. Update nodes in `config/nodes.yaml`.
@@ -123,8 +150,9 @@ The report is written to `output/node_groups_report.md`.
 3. Regenerate the outputs:
 
    ```bash
-   python3 build.py
    python3 scripts/classify_nodes.py
+   python3 scripts/check_openai.py
+   python3 build.py
    ```
 
 4. Validate locally:
