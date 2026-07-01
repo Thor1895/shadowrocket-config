@@ -6,14 +6,11 @@ skip-proxy = {{ settings.general.skip_proxy | join(", ") }}
 dns-server = {{ settings.general.dns_server | join(", ") }}
 
 [Proxy]
-{% for node in nodes %}
-{{ node.name }} = {{ node.type }}, {{ node.server }}, {{ node.port }}, encrypt-method={{ node.method }}, password={{ node.password }}
-{% endfor %}
+# 节点由 Shadowrocket 中单独添加的机场订阅提供，本配置不内置任何节点。
 
 [Proxy Group]
 {% for group in groups %}
-{{ group.name }} = {{ group.type }}, {{ group.members | join(", ") }}
-{% endfor %}
+{{ group.name }} = {{ group.type }}{% if group.options is defined and group.options %}, {{ group.options | join(", ") }}{% endif %}{% if group.members is defined and group.members %}, {{ group.members | join(", ") }}{% endif %}{{ "\n" }}{% endfor %}
 
 [Rule]
 {% for section in rules %}

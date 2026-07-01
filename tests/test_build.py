@@ -29,7 +29,7 @@ def test_ai_groups_are_independent_from_proxy() -> None:
     assert "PROXY" not in groups["OpenAI"]
     assert "PROXY" not in groups["Gemini"]
     assert "PROXY" not in groups["Claude"]
-    assert groups["OpenAI"] == ["JP-Direct-Tokyo", "SG-Direct-Singapore", "US-Direct-LosAngeles"]
+    assert groups["OpenAI"] == ["日本节点", "新加坡节点", "美国节点"]
 
 
 def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
@@ -37,16 +37,9 @@ def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     groups = parse_groups(lines)
 
-    expected_nodes = {
-        "JP-Direct-Tokyo",
-        "SG-Direct-Singapore",
-        "US-Direct-LosAngeles",
-        "HK-Dedicated-HongKong",
-        "MO-Relay-Macau",
-    }
-    assert expected_nodes.issubset(set(groups["PROXY"]))
-    assert groups["Streaming"][0] == "HK-Dedicated-HongKong"
-    assert set(groups["Streaming"]) == expected_nodes
+    assert groups["PROXY"] == ["全部节点", "DIRECT"]
+    assert groups["Streaming"][0] == "专线节点"
+    assert "香港节点" in groups["Streaming"]
 
 
 def test_required_routes() -> None:
@@ -68,3 +61,24 @@ def test_required_routes() -> None:
 def test_validate_script_rules_pass() -> None:
     build.build()
     validate()
+
+
+def test_proxy_section_does_not_contain_sample_nodes() -> None:
+    output = build.build()
+    text = output.read_text(encoding="utf-8")
+    lines = [line.strip() for line in text.splitlines()]
+    proxy_lines = [line for line in lines[lines.index("[Proxy]") + 1:lines.index("[Proxy Group]")] if line]
+
+    assert proxy_lines == ["# 节点由 Shadowrocket 中单独添加的机场订阅提供，本配置不内置任何节点。"]
+    for sample in ["MO-Relay-Macau", "HK-Dedicated-HongKong", "US-Direct-LosAngeles", "SG-Direct-Singapore", "JP-Direct-Tokyo"]:
+        assert sample not in text
+
+
+def test_regex_policy_groups_include_use_true() -> None:
+    output = build.build()
+    lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
+    group_lines = [line for line in lines[lines.index("[Proxy Group]") + 1:lines.index("[Rule]")] if line]
+
+    regex_groups = [line for line in group_lines if "policy-regex-filter=" in line]
+    assert regex_groups
+    assert all("use=true" in line for line in regex_groups)

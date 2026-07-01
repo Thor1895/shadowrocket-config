@@ -39,7 +39,7 @@ def test_build_prefers_top_nodes_from_score_file(tmp_path: Path, monkeypatch) ->
     output = build.build()
     groups = _groups_from_output(output)
 
-    expected = ["HK-Dedicated-HongKong", "MO-Relay-Macau", "JP-Direct-Tokyo"]
+    expected = ["香港节点", "澳门节点", "日本节点"]
     assert groups["OpenAI"] == expected
     assert groups["Gemini"] == expected
     assert groups["Claude"] == expected
@@ -51,7 +51,7 @@ def test_build_falls_back_to_default_ai_candidates_without_score_file(tmp_path: 
     output = build.build()
     groups = _groups_from_output(output)
 
-    assert groups["OpenAI"] == ["JP-Direct-Tokyo", "SG-Direct-Singapore", "US-Direct-LosAngeles"]
+    assert groups["OpenAI"] == ["日本节点", "新加坡节点", "美国节点"]
     assert groups["Gemini"] == groups["OpenAI"]
     assert groups["Claude"] == groups["OpenAI"]
 

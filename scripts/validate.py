@@ -14,6 +14,15 @@ from services.rule_loader import load_nodes
 OUTPUT = SHADOWROCKET_FILE
 
 AI_GROUPS = AI_SERVICES
+SAMPLE_NODE_NAMES = {
+    "MO-Relay-Macau",
+    "HK-Dedicated-HongKong",
+    "US-Direct-LosAngeles",
+    "SG-Direct-Singapore",
+    "JP-Direct-Tokyo",
+}
+NODE_PROTOCOL_PREFIXES = ("ss,", "vmess,", "vless,", "trojan,")
+
 DIRECT_DOMAINS = {
     "alipay.com",
     "alipayobjects.com",
@@ -68,11 +77,35 @@ def parse_rules(lines: list[str]) -> list[tuple[str, ...]]:
     return [tuple(part.strip() for part in line.split(",")) for line in section(lines, "[Rule]")]
 
 
+def validate_proxy_section(lines: list[str]) -> None:
+    proxy_lines = section(lines, "[Proxy]")
+    for line in proxy_lines:
+        if " = " in line and any(prefix in line for prefix in NODE_PROTOCOL_PREFIXES):
+            raise AssertionError("[Proxy] section must not contain built-in node definitions")
+
+
+def validate_no_sample_nodes(text: str) -> None:
+    for name in SAMPLE_NODE_NAMES:
+        if name in text:
+            raise AssertionError(f"generated config must not contain sample node {name}")
+
+
+def validate_regex_groups(lines: list[str]) -> None:
+    for line in section(lines, "[Proxy Group]"):
+        if "policy-regex-filter=" in line and "use=true" not in line:
+            raise AssertionError(f"regex policy group must include use=true: {line}")
+
+
 def validate() -> None:
+    text = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
     lines = read_lines()
     for header in ("[General]", "[Proxy]", "[Proxy Group]", "[Rule]"):
         if header not in lines:
             raise AssertionError(f"missing {header} section")
+
+    validate_proxy_section(lines)
+    validate_no_sample_nodes(text)
+    validate_regex_groups(lines)
 
     groups = parse_groups(lines)
     rules = parse_rules(lines)

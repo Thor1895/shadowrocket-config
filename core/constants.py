@@ -42,3 +42,29 @@ REGION_PENALTIES = {
     "hong_kong": 20,
     "macau": 25,
 }
+
+REGION_POLICY_GROUPS = {
+    "japan": "日本节点",
+    "singapore": "新加坡节点",
+    "united_states": "美国节点",
+    "hong_kong": "香港节点",
+    "macau": "澳门节点",
+}
+
+REGION_POLICY_REGEX = {
+    "日本节点": "日本|JP|Japan",
+    "新加坡节点": "新加坡|SG|Singapore",
+    "美国节点": "美国|US|USA|United States|America",
+    "香港节点": "香港|HK|Hong Kong|HongKong",
+    "澳门节点": "澳门|MO|Macau|Macao",
+    "专线节点": "专线|IPLC|IEPL|Dedicated|Premium",
+    "全部节点": ".*",
+}
+
+URL_TEST_OPTIONS = [
+    "use=true",
+    "url=http://cp.cloudflare.com/generate_204",
+    "interval=300",
+    "timeout=3",
+    "tolerance=20",
+]

@@ -68,7 +68,7 @@ def test_build_ai_selection_falls_back_without_score_file(tmp_path: Path) -> Non
     from core.router import ai_nodes
 
     assert ai_nodes(load_nodes(), score_path=tmp_path / "missing_node_score.json") == [
-        "JP-Direct-Tokyo",
-        "SG-Direct-Singapore",
-        "US-Direct-LosAngeles",
+        "日本节点",
+        "新加坡节点",
+        "美国节点",
     ]
