@@ -17,6 +17,8 @@ python3 -m pytest -q
 
 The workflow also uploads `output/shadowrocket.conf` as a build artifact.
 
+The auto-publish workflow also runs on pushes to `main`. When `python3 build.py` and `python3 scripts/validate.py` pass, it commits only `output/shadowrocket.conf` back to the repository if that generated file changed. The bot commit uses `[skip ci]` to avoid an infinite workflow loop.
+
 ## Layout
 
 ```text
@@ -185,5 +187,43 @@ OpenAI does not use `url-test` automatic latency selection because latency is no
    python3 -m pytest -q
    ```
 
-5. Commit `config/`, templates or scripts, tests, and the regenerated `output/shadowrocket.conf`.
+5. Commit source changes under `config/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`.
 6. Push to `main` and confirm the GitHub Actions run passes.
+
+## Generated Output Policy
+
+Do not manually edit files in `output/`. They are generated artifacts, not the source of truth. Manual edits make local state drift away from YAML config, templates, health checks, and tests, which increases the chance of push conflicts and Shadowrocket rules that cannot be reproduced.
+
+Always generate Shadowrocket config through:
+
+```bash
+python3 build.py
+```
+
+`build.py` is the single generation entry point. It applies the YAML config, Jinja2 template, OpenAI health data, node classification rules, and validation assumptions consistently.
+
+The intended ownership model is:
+
+- GitHub is the configuration source.
+- Codex is the generation engine.
+- `output/shadowrocket.conf` is generated and published automatically.
+
+## Git Conflict Strategy
+
+Before local maintenance, update from GitHub with rebase:
+
+```bash
+git pull --rebase
+```
+
+Then make source changes, build or validate locally, commit, and push:
+
+```bash
+git push
+```
+
+Prefer rebase over merge commits for this repository. Merge commits make generated-output history harder to reason about and can reintroduce old generated files during conflict resolution.
+
+Do not force push unless the repository is being intentionally rebuilt from scratch. Force pushes can discard generated config commits produced by GitHub Actions and make other local clones stale.
+
+`scripts/sync_guard.py` checks whether `origin/main` has commits missing from local `HEAD`. `python3 build.py` runs this guard before generating locally, so a stale checkout is blocked before it creates output that would later conflict on push.

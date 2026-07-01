@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+import sys
 from typing import Any
 
 import yaml
@@ -121,6 +123,13 @@ def build() -> Path:
     return OUTPUT_FILE
 
 
+def run_sync_guard() -> None:
+    result = subprocess.run([sys.executable, str(ROOT / "scripts" / "sync_guard.py")], cwd=ROOT)
+    if result.returncode != 0:
+        raise SystemExit(result.returncode)
+
+
 if __name__ == "__main__":
+    run_sync_guard()
     path = build()
     print(f"Generated {path.relative_to(ROOT)}")
