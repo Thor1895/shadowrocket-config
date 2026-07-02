@@ -22,6 +22,7 @@ SAMPLE_NODE_NAMES = {
     "JP-Direct-Tokyo",
 }
 NODE_PROTOCOL_PREFIXES = ("ss,", "vmess,", "vless,", "trojan,")
+BANNED_EXAMPLE_TOKENS = {"jp.example.com", "sg.example.com", "change-me"}
 
 DIRECT_DOMAINS = {
     "alipay.com",
@@ -88,6 +89,9 @@ def validate_no_sample_nodes(text: str) -> None:
     for name in SAMPLE_NODE_NAMES:
         if name in text:
             raise AssertionError(f"generated config must not contain sample node {name}")
+    for token in BANNED_EXAMPLE_TOKENS:
+        if token in text:
+            raise AssertionError(f"generated config must not contain example token {token}")
 
 
 def validate_regex_groups(lines: list[str]) -> None:

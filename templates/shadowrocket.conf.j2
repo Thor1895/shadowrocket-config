@@ -10,7 +10,7 @@ dns-server = {{ settings.general.dns_server | join(", ") }}
 
 [Proxy Group]
 {% for group in groups %}
-{{ group.name }} = {{ group.type }}{% if group.options is defined and group.options %}, {{ group.options | join(", ") }}{% endif %}{% if group.members is defined and group.members %}, {{ group.members | join(", ") }}{% endif %}{{ "\n" }}{% endfor %}
+{{ group.name }} = {{ group.type }}{% if group.options is defined and group.options %},{{ group.options | join(",") }}{% endif %}{% if group.members is defined and group.members %},{{ group.members | join(",") }}{% endif %}{{ "\n" }}{% endfor %}
 
 [Rule]
 {% for section in rules %}

@@ -37,7 +37,7 @@ def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     groups = parse_groups(lines)
 
-    assert groups["PROXY"] == ["全部节点", "DIRECT"]
+    assert groups["PROXY"] == ["use=true", "policy-regex-filter=.*", "url=http://cp.cloudflare.com/generate_204", "interval=300", "timeout=3", "tolerance=20"]
     assert groups["Streaming"][0] == "专线节点"
     assert "香港节点" in groups["Streaming"]
 
@@ -82,3 +82,11 @@ def test_regex_policy_groups_include_use_true() -> None:
     regex_groups = [line for line in group_lines if "policy-regex-filter=" in line]
     assert regex_groups
     assert all("use=true" in line for line in regex_groups)
+
+
+def test_proxy_group_is_subscription_regex_filter() -> None:
+    output = build.build()
+    lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
+    proxy_group_line = next(line for line in lines if line.startswith("PROXY = "))
+
+    assert proxy_group_line == "PROXY = url-test,use=true,policy-regex-filter=.*,url=http://cp.cloudflare.com/generate_204,interval=300,timeout=3,tolerance=20"

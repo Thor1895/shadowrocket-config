@@ -52,13 +52,12 @@ REGION_POLICY_GROUPS = {
 }
 
 REGION_POLICY_REGEX = {
-    "日本节点": "日本|JP|Japan",
+    "日本节点": "日本|JP|Japan|Tokyo|东京",
     "新加坡节点": "新加坡|SG|Singapore",
     "美国节点": "美国|US|USA|United States|America",
     "香港节点": "香港|HK|Hong Kong|HongKong",
     "澳门节点": "澳门|MO|Macau|Macao",
     "专线节点": "专线|IPLC|IEPL|Dedicated|Premium",
-    "全部节点": ".*",
 }
 
 URL_TEST_OPTIONS = [

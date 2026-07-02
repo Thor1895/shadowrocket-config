@@ -44,7 +44,7 @@ def route(service: str, nodes: list[dict], score_path: Path = NODE_SCORE_FILE) -
     if service == "Streaming":
         return ["专线节点", "香港节点", "日本节点", "新加坡节点", "美国节点"]
     if service == "PROXY":
-        return ["全部节点", "DIRECT"]
+        return []
     raise ValueError(f"Unknown service route {service!r}")
 
 
@@ -62,7 +62,7 @@ def regex_policy_groups() -> list[dict[str, object]]:
 
 def build_proxy_groups(nodes: list[dict], score_path: Path = NODE_SCORE_FILE) -> list[dict[str, object]]:
     groups: list[dict[str, object]] = [
-        {"name": "PROXY", "type": "select", "members": route("PROXY", nodes, score_path=score_path)},
+        {"name": "PROXY", "type": "url-test", "options": ["use=true", "policy-regex-filter=.*", *URL_TEST_OPTIONS[1:]], "members": []},
         {"name": "OpenAI", "type": "select", "members": route("OpenAI", nodes, score_path=score_path)},
         {"name": "Streaming", "type": "select", "members": route("Streaming", nodes, score_path=score_path)},
         {"name": "Gemini", "type": "select", "members": route("Gemini", nodes, score_path=score_path)},
