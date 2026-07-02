@@ -6,7 +6,9 @@ skip-proxy = {{ settings.general.skip_proxy | join(", ") }}
 dns-server = {{ settings.general.dns_server | join(", ") }}
 
 [Proxy]
-# 节点由 Shadowrocket 中单独添加的机场订阅提供，本配置不内置任何节点。
+{% for proxy in proxies %}
+{{ proxy }}
+{% endfor %}
 
 [Proxy Group]
 {% for group in groups %}

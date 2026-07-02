@@ -22,7 +22,7 @@ SAMPLE_NODE_NAMES = {
     "JP-Direct-Tokyo",
 }
 NODE_PROTOCOL_PREFIXES = ("ss,", "vmess,", "vless,", "trojan,")
-BANNED_EXAMPLE_TOKENS = {"jp.example.com", "sg.example.com", "change-me"}
+BANNED_EXAMPLE_TOKENS = {"example.com", "change-me"}
 
 DIRECT_DOMAINS = {
     "alipay.com",
@@ -80,8 +80,11 @@ def parse_rules(lines: list[str]) -> list[tuple[str, ...]]:
 
 def validate_proxy_section(lines: list[str]) -> None:
     proxy_lines = section(lines, "[Proxy]")
+    if not proxy_lines:
+        raise AssertionError("[Proxy] section must contain private subscription nodes")
     for line in proxy_lines:
-        if " = " in line and any(prefix in line for prefix in NODE_PROTOCOL_PREFIXES):
+        normalized = line.strip().lower()
+        if " = " in line and any(prefix in normalized for prefix in NODE_PROTOCOL_PREFIXES):
             raise AssertionError("[Proxy] section must not contain built-in node definitions")
 
 

@@ -1,79 +1,13 @@
 name: Auto Publish Generated Config
 
 on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  publish:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+  disabled:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: python3 -m pip install -r requirements.txt
-
-      - name: Generate mock OpenAI health
-        run: python3 scripts/check_openai.py --mode mock
-
-      - name: Score nodes
-        run: python3 scripts/node_scorer.py
-
-      - name: Build generated config
-        env:
-          SKIP_SYNC_GUARD: "1"
-        run: python3 build.py
-
-      - name: Validate generated config
-        run: python3 scripts/validate.py
-
-      - name: Check architecture complexity
-        run: python3 scripts/complexity_check.py
-
-      - name: Generate release metadata
-        run: python3 scripts/release_meta.py
-
-      - name: Commit generated outputs
+      - name: Private build mode notice
         run: |
-          if git diff --quiet -- output/shadowrocket.conf output/node_score.json output/latest.json; then
-            echo "Generated outputs are already up to date"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add output/shadowrocket.conf output/node_score.json output/latest.json
-          git commit -m "Update generated Shadowrocket release files [skip ci]"
-          git push
-
-      - name: Publish latest release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ! gh release view latest >/dev/null 2>&1; then
-            gh release create latest \
-              --title "Latest Shadowrocket Config" \
-              --notes "Automatically generated Shadowrocket subscription release." \
-              --latest
-          else
-            gh release edit latest \
-              --title "Latest Shadowrocket Config" \
-              --notes "Automatically generated Shadowrocket subscription release." \
-              --latest
-          fi
-
-          gh release upload latest output/shadowrocket.conf output/latest.json output/node_score.json --clobber
+          echo "Auto publishing is disabled because private builds embed subscription nodes and credentials."
+          echo "Do not publish output/shadowrocket.conf from private SUBSCRIBE_URL builds."

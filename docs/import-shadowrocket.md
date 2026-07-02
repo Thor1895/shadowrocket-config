@@ -1,9 +1,10 @@
 # Import Shadowrocket Config
 
-Use the GitHub Release URL to import the generated configuration into Shadowrocket:
+This project now uses private local builds. Generate the config locally:
 
-```text
-https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
+```bash
+export SUBSCRIBE_URL='你的订阅链接'
+SKIP_SYNC_GUARD=1 python3 build.py
 ```
 
 ## Steps
@@ -11,18 +12,7 @@ https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowr
 1. Open Shadowrocket on iOS.
 2. Tap the add button.
 3. Choose the option to add a remote configuration or subscribe by URL.
-4. Paste the release URL:
+4. Import the local `output/shadowrocket.conf` file through your preferred private transfer method.
+5. Save the configuration and update it in Shadowrocket.
 
-   ```text
-   https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
-   ```
-
-5. Save the subscription and update it in Shadowrocket.
-
-After each update to `main`, GitHub Actions rebuilds the config and updates the `latest` release asset. The URL stays the same, so Shadowrocket can keep using it as a permanent subscription endpoint.
-
-The legacy raw URL is still available when needed:
-
-```text
-https://raw.githubusercontent.com/Thor1895/shadowrocket-config/main/output/shadowrocket.conf
-```
+Do not upload `output/shadowrocket.conf` to a public GitHub raw URL or Release asset. It contains subscription nodes and credentials.

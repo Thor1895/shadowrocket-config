@@ -12,10 +12,12 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from core.constants import NODE_SCORE_FILE, OUTPUT_DIR, ROOT, SHADOWROCKET_FILE, TEMPLATE_DIR
 from core.router import build_proxy_groups
 from services.rule_loader import load_build_inputs
+from services.subscription_loader import load_subscription_nodes
 
 
 def load_config() -> dict:
     config = load_build_inputs()
+    config["proxies"] = load_subscription_nodes()
     config["groups"] = build_proxy_groups(config["nodes"], score_path=NODE_SCORE_FILE)
     return config
 

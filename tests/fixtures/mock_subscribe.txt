@@ -1,0 +1,4 @@
+ss://YWVzLTI1Ni1nY206cGFzc0BqcC5tb2NrLmxvY2FsOjgzODg=#日本-Mock-Tokyo
+ss://YWVzLTI1Ni1nY206cGFzc0BzZy5tb2NrLmxvY2FsOjgzODg=#新加坡-Mock-Singapore
+ss://YWVzLTI1Ni1nY206cGFzc0B1cy5tb2NrLmxvY2FsOjgzODg=#美国-Mock-LosAngeles
+trojan://pass@hk.mock.local:443#香港-专线-Mock

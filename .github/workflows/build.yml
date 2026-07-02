@@ -28,6 +28,9 @@ jobs:
         run: python3 scripts/node_scorer.py
 
       - name: Build config
+        env:
+          SKIP_SYNC_GUARD: "1"
+          SUBSCRIBE_URL: tests/fixtures/mock_subscribe.txt
         run: python3 build.py
 
       - name: Validate config
@@ -38,10 +41,3 @@ jobs:
 
       - name: Run tests
         run: python3 -m pytest -q
-
-      - name: Upload generated config
-        uses: actions/upload-artifact@v4
-        with:
-          name: shadowrocket.conf
-          path: output/shadowrocket.conf
-          if-no-files-found: error

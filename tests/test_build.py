@@ -9,8 +9,23 @@ sys.path.insert(0, str(ROOT))
 import build
 from scripts.validate import parse_groups, parse_rules, validate
 
+FIXTURE_SUBSCRIBE = ROOT / "tests" / "fixtures" / "mock_subscribe.txt"
 
-def test_build_generates_shadowrocket_config() -> None:
+
+def test_build_uses_private_subscription_nodes(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
+    output = build.build()
+    text = output.read_text(encoding="utf-8")
+
+    assert "ss://" in text
+    assert "trojan://" in text
+    assert "日本-Mock-Tokyo" in text
+    assert "jp.example.com" not in text
+    assert "change-me" not in text
+
+
+def test_build_generates_shadowrocket_config(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
 
     assert output.exists()
@@ -21,7 +36,8 @@ def test_build_generates_shadowrocket_config() -> None:
     assert "[Rule]" in text
 
 
-def test_ai_groups_are_independent_from_proxy() -> None:
+def test_ai_groups_are_independent_from_proxy(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     groups = parse_groups(lines)
@@ -32,7 +48,8 @@ def test_ai_groups_are_independent_from_proxy() -> None:
     assert groups["OpenAI"] == ["日本节点", "新加坡节点", "美国节点"]
 
 
-def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
+def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     groups = parse_groups(lines)
@@ -42,7 +59,8 @@ def test_proxy_uses_all_nodes_and_streaming_prefers_dedicated_nodes() -> None:
     assert "香港节点" in groups["Streaming"]
 
 
-def test_required_routes() -> None:
+def test_required_routes(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     rules = parse_rules(lines)
@@ -58,23 +76,26 @@ def test_required_routes() -> None:
     assert ("DOMAIN-SUFFIX", "youtube.com", "Streaming") in rules
 
 
-def test_validate_script_rules_pass() -> None:
+def test_validate_script_rules_pass(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     build.build()
     validate()
 
 
-def test_proxy_section_does_not_contain_sample_nodes() -> None:
+def test_proxy_section_does_not_contain_sample_nodes(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     text = output.read_text(encoding="utf-8")
     lines = [line.strip() for line in text.splitlines()]
     proxy_lines = [line for line in lines[lines.index("[Proxy]") + 1:lines.index("[Proxy Group]")] if line]
 
-    assert proxy_lines == ["# 节点由 Shadowrocket 中单独添加的机场订阅提供，本配置不内置任何节点。"]
+    assert proxy_lines
     for sample in ["MO-Relay-Macau", "HK-Dedicated-HongKong", "US-Direct-LosAngeles", "SG-Direct-Singapore", "JP-Direct-Tokyo"]:
         assert sample not in text
 
 
-def test_regex_policy_groups_include_use_true() -> None:
+def test_regex_policy_groups_include_use_true(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     group_lines = [line for line in lines[lines.index("[Proxy Group]") + 1:lines.index("[Rule]")] if line]
@@ -84,7 +105,8 @@ def test_regex_policy_groups_include_use_true() -> None:
     assert all("use=true" in line for line in regex_groups)
 
 
-def test_proxy_group_is_subscription_regex_filter() -> None:
+def test_proxy_group_is_subscription_regex_filter(monkeypatch) -> None:
+    monkeypatch.setenv("SUBSCRIBE_URL", str(FIXTURE_SUBSCRIBE))
     output = build.build()
     lines = [line.strip() for line in output.read_text(encoding="utf-8").splitlines()]
     proxy_group_line = next(line for line in lines if line.startswith("PROXY = "))

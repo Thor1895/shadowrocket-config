@@ -4,6 +4,22 @@
 
 Python + YAML + Jinja2 based Shadowrocket configuration generator.
 
+## Private Build Mode
+
+This repository is now designed for private local builds. `build.py` reads your airport subscription from `SUBSCRIBE_URL`, embeds those nodes into `[Proxy]`, and generates a complete Shadowrocket config for your own device.
+
+`output/shadowrocket.conf` contains subscription nodes, passwords, and tokens. Do not commit it to a public GitHub repository, upload it as a public artifact, or publish it as a Release asset. The file is ignored by Git.
+
+Local build:
+
+```bash
+export SUBSCRIBE_URL='你的订阅链接'
+SKIP_SYNC_GUARD=1 python3 build.py
+python3 scripts/validate.py
+```
+
+`SUBSCRIBE_URL` may point to an `https://` subscription or a local fixture file. The value is never written to the generated config, `output/latest.json`, logs, or README examples.
+
 ## Status
 
 GitHub Actions runs on every push to `main`:
@@ -17,9 +33,7 @@ python3 scripts/complexity_check.py
 python3 -m pytest -q
 ```
 
-The workflow also uploads `output/shadowrocket.conf` as a build artifact.
-
-The auto-publish workflow also runs on pushes to `main`. When `python3 build.py` and `python3 scripts/validate.py` pass, it commits generated release outputs back to the repository if they changed. The bot commit uses `[skip ci]` to avoid an infinite workflow loop, then updates the `latest` GitHub Release assets.
+CI uses `tests/fixtures/mock_subscribe.txt` as `SUBSCRIBE_URL`. It does not use a real subscription URL. Auto-publishing is disabled because private builds embed subscription nodes and credentials.
 
 ## Layout
 
@@ -50,7 +64,7 @@ The auto-publish workflow also runs on pushes to `main`. When `python3 build.py`
 ├── tests/
 │   └── test_build.py
 └── output/
-    └── shadowrocket.conf
+    └── shadowrocket.conf  # local only, ignored by Git
 ```
 
 ## Usage
@@ -64,7 +78,8 @@ pip install -r requirements.txt
 Generate the Shadowrocket config:
 
 ```bash
-python build.py
+export SUBSCRIBE_URL='你的订阅链接'
+SKIP_SYNC_GUARD=1 python3 build.py
 ```
 
 Validate the generated config:
@@ -76,43 +91,7 @@ pytest
 
 ## Shadowrocket Import
 
-Use this release URL in Shadowrocket as the recommended remote configuration subscription:
-
-```text
-https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
-```
-
-The legacy GitHub raw URL also works, but the release URL is preferred because it is a stable subscription endpoint backed by the auto-publish workflow:
-
-```text
-https://raw.githubusercontent.com/Thor1895/shadowrocket-config/main/output/shadowrocket.conf
-```
-
-See [docs/import-shadowrocket.md](docs/import-shadowrocket.md) for import steps.
-
-## Subscription Release
-
-Shadowrocket only needs one permanent URL:
-
-```text
-https://github.com/Thor1895/shadowrocket-config/releases/latest/download/shadowrocket.conf
-```
-
-Every push to `main` rebuilds and validates the config. If the generated output changes, GitHub Actions updates:
-
-- `output/shadowrocket.conf`
-- `output/latest.json`
-- the `latest` GitHub Release asset `shadowrocket.conf`
-- the `latest` GitHub Release asset `latest.json`
-
-`output/latest.json` contains:
-
-- `version`: the commit hash used for the generated release metadata
-- `timestamp`: UTC generation time
-- `raw_url`: the permanent release download URL
-- `sha256`: checksum of `shadowrocket.conf`
-
-The version strategy is intentionally simple: each generated subscription version is tied to a commit hash. Shadowrocket continues to use the same release download URL, while `latest.json` records which commit produced the current artifact and its checksum.
+Import the locally generated `output/shadowrocket.conf` into Shadowrocket manually. Do not use a public raw URL or public Release URL for private builds.
 
 ## Routing Policy
 
@@ -258,8 +237,8 @@ The production code is split by responsibility:
    python3 scripts/classify_nodes.py
    python3 scripts/check_openai.py --mode mock
    python3 scripts/node_scorer.py
-   python3 build.py
-   python3 scripts/release_meta.py
+   export SUBSCRIBE_URL='你的订阅链接'
+   SKIP_SYNC_GUARD=1 python3 build.py
    ```
 
 4. Validate locally:
@@ -269,12 +248,12 @@ The production code is split by responsibility:
    python3 -m pytest -q
    ```
 
-5. Commit source changes under `data/`, `core/`, `services/`, `jobs/`, `templates/`, `scripts/`, `tests/`, and docs. Let GitHub Actions regenerate and publish `output/shadowrocket.conf`, `output/node_score.json`, and `output/latest.json`.
+5. Commit source changes under `data/`, `core/`, `services/`, `jobs/`, `templates/`, `scripts/`, `tests/`, and docs. Do not commit `output/shadowrocket.conf`.
 6. Push to `main` and confirm the GitHub Actions run passes.
 
 ## Generated Output Policy
 
-Do not manually edit files in `output/`. They are generated artifacts, not the source of truth. Manual edits make local state drift away from YAML config, templates, health checks, and tests, which increases the chance of push conflicts and Shadowrocket rules that cannot be reproduced.
+Do not manually edit files in `output/`. They are generated artifacts, not the source of truth. `output/shadowrocket.conf` is private and ignored by Git because it contains subscription nodes and credentials.
 
 Always generate Shadowrocket config through:
 
@@ -288,7 +267,7 @@ The intended ownership model is:
 
 - GitHub is the configuration source.
 - Codex is the generation engine.
-- `output/shadowrocket.conf` is generated and published automatically.
+- `output/shadowrocket.conf` is generated locally and kept private.
 
 ## Git Conflict Strategy
 
